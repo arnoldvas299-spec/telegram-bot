@@ -15,7 +15,7 @@ bot.onText(/\/start/, (msg) => {
     `📥 Envíame un link de:
 
 ✅ TikTok (videos y fotos)
-✅ Instagram (reels/videos)`
+✅ Instagram (videos y fotos)`
   );
 });
 
@@ -83,38 +83,44 @@ bot.on('message', async (msg) => {
         '⏳ Descargando Instagram...'
       );
 
-      try {
+      const response = await axios.get(
+        `https://api.vreden.my.id/api/igdl?url=${encodeURIComponent(text)}`
+      );
 
-        const response = await axios.get(
-          `https://igram.world/api/ig?url=${encodeURIComponent(text)}`
+      const data = response.data;
+
+      if (!data.result || !data.result.length) {
+        return bot.sendMessage(
+          chatId,
+          '❌ No pude descargar ese Instagram.'
         );
+      }
 
-        const videoUrl =
-          response.data?.url ||
-          response.data?.video_url;
+      for (const media of data.result) {
 
-        if (videoUrl) {
+        if (media.url.includes('.mp4')) {
 
-          return bot.sendVideo(
+          await bot.sendVideo(
             chatId,
-            videoUrl,
+            media.url,
             {
               caption: '✅ Video descargado'
             }
           );
-        }
 
-      } catch (err) {
-        console.log(err);
+        } else {
+
+          await bot.sendPhoto(
+            chatId,
+            media.url
+          );
+        }
       }
 
-      return bot.sendMessage(
-        chatId,
-        '❌ No pude descargar ese Instagram.'
-      );
+      return;
     }
 
-    bot.sendMessage(
+    return bot.sendMessage(
       chatId,
       '❌ Link no válido'
     );
