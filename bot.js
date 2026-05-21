@@ -12,7 +12,10 @@ console.log('Bot encendido ✅');
 bot.onText(/\/start/, (msg) => {
   bot.sendMessage(
     msg.chat.id,
-    '📥 Envíame un link de TikTok'
+    `📥 Envíame un link de:
+
+✅ TikTok (videos y fotos)
+✅ Instagram (reels, videos y fotos)`
   );
 });
 
@@ -24,55 +27,115 @@ bot.on('message', async (msg) => {
 
   try {
 
-    if (!text.includes('tiktok.com')) {
-      return bot.sendMessage(
+    // ===== TIKTOK =====
+    if (text.includes('tiktok.com')) {
+
+      await bot.sendMessage(
         chatId,
-        '❌ Solo TikTok por ahora'
+        '⏳ Descargando TikTok...'
       );
-    }
 
-    await bot.sendMessage(
-      chatId,
-      '⏳ Descargando TikTok...'
-    );
+      const response = await axios.get(
+        `https://www.tikwm.com/api/?url=${encodeURIComponent(text)}`
+      );
 
-    const response = await axios.get(
-      `https://www.tikwm.com/api/?url=${encodeURIComponent(text)}`
-    );
+      const data = response.data.data;
 
-    const data = response.data.data;
+      // Fotos TikTok
+      if (
+        data.images &&
+        Array.isArray(data.images) &&
+        data.images.length > 0
+      ) {
 
-    // Fotos TikTok
-    if (
-      data.images &&
-      Array.isArray(data.images) &&
-      data.images.length > 0
-    ) {
+        for (const image of data.images) {
+          await bot.sendPhoto(chatId, image);
+        }
 
-      for (const image of data.images) {
-        await bot.sendPhoto(chatId, image);
+        return bot.sendMessage(
+          chatId,
+          '✅ Fotos descargadas'
+        );
+      }
+
+      // Video TikTok
+      if (data.play) {
+        return bot.sendVideo(
+          chatId,
+          data.play,
+          {
+            caption: '✅ Video descargado'
+          }
+        );
       }
 
       return bot.sendMessage(
         chatId,
-        '✅ Fotos descargadas'
+        '❌ No pude descargar ese TikTok.'
       );
     }
 
-    // Video TikTok
-    if (data.play) {
-      return bot.sendVideo(
+    // ===== INSTAGRAM =====
+    if (text.includes('instagram.com')) {
+
+      await bot.sendMessage(
         chatId,
-        data.play,
-        {
-          caption: '✅ Video descargado'
+        '⏳ Descargando Instagram...'
+      );
+
+      try {
+
+        const api = await axios.get(
+          `https://api.neoxr.eu/api/ig?url=${encodeURIComponent(text)}&apikey=mcandy`
+        );
+
+        const data = api.data;
+
+        if (
+          data.status &&
+          data.data &&
+          data.data.length > 0
+        ) {
+
+          for (const media of data.data) {
+
+            if (
+              media.url.endsWith('.mp4')
+            ) {
+
+              await bot.sendVideo(
+                chatId,
+                media.url,
+                {
+                  caption: '✅ Video descargado'
+                }
+              );
+
+            } else {
+
+              await bot.sendPhoto(
+                chatId,
+                media.url
+              );
+            }
+          }
+
+          return;
         }
+
+      } catch (e) {
+        console.log(e);
+      }
+
+      return bot.sendMessage(
+        chatId,
+        '❌ No pude descargar ese Instagram.'
       );
     }
 
     bot.sendMessage(
       chatId,
-      '❌ No pude descargar ese TikTok.'
+      '❌ Link no válido'
     );
 
   } catch (error) {
