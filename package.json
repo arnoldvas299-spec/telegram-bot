@@ -14,6 +14,7 @@
     "axios": "^1.16.1",
     "express": "^5.2.1",
     "node-telegram-bot-api": "^0.67.0",
+    "youtube-dl-exec": "^3.1.7",
     "yt-dlp-exec": "^1.0.2"
   }
 }
