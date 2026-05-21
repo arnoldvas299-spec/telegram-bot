@@ -75,71 +75,72 @@ bot.on('message', async (msg) => {
       );
     }
 
-    // ===== INSTAGRAM / FACEBOOK =====
-    if (
-      text.includes('instagram.com') ||
-      text.includes('facebook.com') ||
-      text.includes('fb.watch')
-    ) {
+    // ===== INSTAGRAM =====
+if (text.includes('instagram.com')) {
 
-      const carpeta = path.join(
-        __dirname,
-        `descarga_${Date.now()}`
-      );
+  await bot.sendMessage(
+    chatId,
+    '⏳ Descargando Instagram...'
+  );
 
-      fs.mkdirSync(carpeta, {
-        recursive: true
+  try {
+
+    const api = await axios.get(
+      `https://www.tikwm.com/api/?url=${encodeURIComponent(text)}`
+    );
+
+    const data = api.data.data;
+
+    if (data.play) {
+      return bot.sendVideo(chatId, data.play, {
+        caption: '✅ Video descargado'
       });
+    }
 
-      await bot.sendMessage(
-        chatId,
-        '⏳ Descargando...'
-      );
+  } catch (e) {
+    console.log(e);
+  }
 
-      await ytdlp(text, {
-        output: path.join(
-          carpeta,
-          '%(title)s.%(ext)s'
-        ),
-        format: 'bestvideo+bestaudio/best'
+  return bot.sendMessage(
+    chatId,
+    '❌ No pude descargar ese Instagram.'
+  );
+}
+
+// ===== FACEBOOK =====
+if (
+  text.includes('facebook.com') ||
+  text.includes('fb.watch')
+) {
+
+  await bot.sendMessage(
+    chatId,
+    '⏳ Descargando Facebook...'
+  );
+
+  try {
+
+    const api = await axios.get(
+      `https://www.tikwm.com/api/?url=${encodeURIComponent(text)}`
+    );
+
+    const data = api.data.data;
+
+    if (data.play) {
+      return bot.sendVideo(chatId, data.play, {
+        caption: '✅ Video descargado'
       });
+    }
 
-      const archivos = fs.readdirSync(carpeta);
+  } catch (e) {
+    console.log(e);
+  }
 
-      for (const archivo of archivos) {
-
-        const ruta = path.join(
-          carpeta,
-          archivo
-        );
-
-        const ext = path
-          .extname(archivo)
-          .toLowerCase();
-
-        // Fotos
-        if (
-          ['.jpg', '.jpeg', '.png', '.webp']
-            .includes(ext)
-        ) {
-          await bot.sendPhoto(chatId, ruta);
-        }
-
-        // Videos
-        if (
-          ['.mp4', '.mov', '.mkv']
-            .includes(ext)
-        ) {
-          await bot.sendVideo(chatId, ruta);
-        }
-      }
-
-      fs.rmSync(carpeta, {
-        recursive: true,
-        force: true
-      });
-
-      return;
+  return bot.sendMessage(
+    chatId,
+    '❌ No pude descargar ese Facebook.'
+  );
+}
     }
 
     bot.sendMessage(
