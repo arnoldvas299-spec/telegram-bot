@@ -15,7 +15,7 @@ bot.onText(/\/start/, (msg) => {
     `📥 Envíame un link de:
 
 ✅ TikTok (videos y fotos)
-✅ Instagram (reels, videos y fotos)`
+✅ Instagram (reels/videos)`
   );
 });
 
@@ -85,46 +85,27 @@ bot.on('message', async (msg) => {
 
       try {
 
-        const api = await axios.get(
-          `https://api.neoxr.eu/api/ig?url=${encodeURIComponent(text)}&apikey=mcandy`
+        const response = await axios.get(
+          `https://igram.world/api/ig?url=${encodeURIComponent(text)}`
         );
 
-        const data = api.data;
+        const videoUrl =
+          response.data?.url ||
+          response.data?.video_url;
 
-        if (
-          data.status &&
-          data.data &&
-          data.data.length > 0
-        ) {
+        if (videoUrl) {
 
-          for (const media of data.data) {
-
-            if (
-              media.url.endsWith('.mp4')
-            ) {
-
-              await bot.sendVideo(
-                chatId,
-                media.url,
-                {
-                  caption: '✅ Video descargado'
-                }
-              );
-
-            } else {
-
-              await bot.sendPhoto(
-                chatId,
-                media.url
-              );
+          return bot.sendVideo(
+            chatId,
+            videoUrl,
+            {
+              caption: '✅ Video descargado'
             }
-          }
-
-          return;
+          );
         }
 
-      } catch (e) {
-        console.log(e);
+      } catch (err) {
+        console.log(err);
       }
 
       return bot.sendMessage(
