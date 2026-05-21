@@ -1,10 +1,7 @@
 const TelegramBot = require('node-telegram-bot-api');
 const axios = require('axios');
-const fs = require('fs');
-const path = require('path');
-const ytdlp = require('yt-dlp-exec').create();
 
-const TOKEN = '8711239939:AAGxPIDdDTiA_D1oNgF7oALgcEnNf05EawA';
+const TOKEN = 'TU_TOKEN_NUEVO_AQUI';
 
 const bot = new TelegramBot(TOKEN, {
   polling: true
@@ -41,13 +38,12 @@ bot.on('message', async (msg) => {
 
       const data = response.data.data;
 
-      // Si es carrusel/fotos
+      // Fotos TikTok
       if (
         data.images &&
         Array.isArray(data.images) &&
         data.images.length > 0
       ) {
-
         for (const image of data.images) {
           await bot.sendPhoto(chatId, image);
         }
@@ -58,7 +54,7 @@ bot.on('message', async (msg) => {
         );
       }
 
-      // Si es video
+      // Video TikTok
       if (data.play) {
         return bot.sendVideo(
           chatId,
@@ -76,71 +72,76 @@ bot.on('message', async (msg) => {
     }
 
     // ===== INSTAGRAM =====
-if (text.includes('instagram.com')) {
+    if (text.includes('instagram.com')) {
 
-  await bot.sendMessage(
-    chatId,
-    '⏳ Descargando Instagram...'
-  );
+      await bot.sendMessage(
+        chatId,
+        '⏳ Descargando Instagram...'
+      );
 
-  try {
+      const api = await axios.get(
+        `https://api.agatz.xyz/api/igdl?url=${encodeURIComponent(text)}`
+      );
 
-    const api = await axios.get(
-      `https://www.tikwm.com/api/?url=${encodeURIComponent(text)}`
-    );
+      const data = api.data;
 
-    const data = api.data.data;
+      if (data.data && data.data.length > 0) {
 
-    if (data.play) {
-      return bot.sendVideo(chatId, data.play, {
-        caption: '✅ Video descargado'
-      });
+        for (const media of data.data) {
+
+          if (media.url.includes('.mp4')) {
+            await bot.sendVideo(chatId, media.url);
+          } else {
+            await bot.sendPhoto(chatId, media.url);
+          }
+        }
+
+        return;
+      }
+
+      return bot.sendMessage(
+        chatId,
+        '❌ No pude descargar ese Instagram.'
+      );
     }
 
-  } catch (e) {
-    console.log(e);
-  }
+    // ===== FACEBOOK =====
+    if (
+      text.includes('facebook.com') ||
+      text.includes('fb.watch')
+    ) {
 
-  return bot.sendMessage(
-    chatId,
-    '❌ No pude descargar ese Instagram.'
-  );
-}
+      await bot.sendMessage(
+        chatId,
+        '⏳ Descargando Facebook...'
+      );
 
-// ===== FACEBOOK =====
-if (
-  text.includes('facebook.com') ||
-  text.includes('fb.watch')
-) {
+      const api = await axios.get(
+        `https://api.agatz.xyz/api/fbdl?url=${encodeURIComponent(text)}`
+      );
 
-  await bot.sendMessage(
-    chatId,
-    '⏳ Descargando Facebook...'
-  );
+      const data = api.data;
 
-  try {
+      if (data.data?.hd) {
+        return bot.sendVideo(
+          chatId,
+          data.data.hd,
+          { caption: '✅ Video descargado' }
+        );
+      }
 
-    const api = await axios.get(
-      `https://www.tikwm.com/api/?url=${encodeURIComponent(text)}`
-    );
+      if (data.data?.sd) {
+        return bot.sendVideo(
+          chatId,
+          data.data.sd,
+          { caption: '✅ Video descargado' }
+        );
+      }
 
-    const data = api.data.data;
-
-    if (data.play) {
-      return bot.sendVideo(chatId, data.play, {
-        caption: '✅ Video descargado'
-      });
-    }
-
-  } catch (e) {
-    console.log(e);
-  }
-
-  return bot.sendMessage(
-    chatId,
-    '❌ No pude descargar ese Facebook.'
-  );
-}
+      return bot.sendMessage(
+        chatId,
+        '❌ No pude descargar ese Facebook.'
+      );
     }
 
     bot.sendMessage(
